@@ -12,9 +12,9 @@ import java.util.StringTokenizer;
 public class RF {
 ///////////////////////////////////////////////////////////////////////////////////
 	public void RandomForest(){	// RF algorithm method
-		File file1 = new File("C:\\JavaIO\\Input\\xor_RF.txt");	// The file name
-		File file2 = new File("C:\\JavaIO\\Input\\xor_RF_ans.txt");	// The file name
-		int d = 2;	// the number of dimension of the data
+		File file1 = new File("C:\\JavaIO\\Input\\Iris.txt");	// The file name
+		File file2 = new File("C:\\JavaIO\\Input\\Iris_ans.txt");	// The file name
+		int d = 4;	// the number of dimension of the data
 //		int data1[][] = DataRead(file,d);	// Load the data
 		double data1[][] = DataReadDouble(file1,d);	// Load the data
 		int ans1[][] = DataRead(file2,1);	// Load the data
@@ -23,8 +23,14 @@ public class RF {
 		///////////////////////////////
 		// Paramter Set & Initiation //
 		///////////////////////////////
-		int n=data1.length;						// the number of elements
-		int rseed=1;							// random seed
+		int n=data1.length;							// the number of elements
+		int nTrain=100;							// the number of training data
+		int nTest=n-nTrain;							// the number of testing data
+		int rseed=1;								// random seed
+		int b=5;									// the number of Decision Tree
+		double Spl [][][] = new double [b][n][d];	// randomly sampled dataset by bootstrap sampling
+		int m=2;									// the number of selected variables s.t. m<=d
+		int nmin=2;									// the depth of Binary Tree
 
 		// data normalization
 		double data[][] = new double[n][d];
@@ -38,18 +44,49 @@ public class RF {
 
 		// create instance
 		Sfmt rnd = new Sfmt(rseed);
+		Mat mat = new Mat();
 
-		for(int i=0; i<n; i++) {
-			for(int j=0; j<d; j++) {
-				if(j==d-1) {
-					System.out.printf("%.3f\t", data[i][j]);
-					System.out.println(ans[i]);
+		RFop rf = new RFop();
+		RFop smp = rf.DivData(data, ans, nTrain, nTest, rseed);				// divide the data into training and testing
+		RFop bsmp = rf.BootStrapSmp(smp.TrainData,smp.TrainAns,b,rseed);	// create dataset by bootstrap sampling from train data
+
+		int AtrSet [][] = new int [b][m]; // the set of selected variables
+		AtrSet = mat.SmplVecUniq(d, b, m, rseed);
+
+		for(int i=0; i<b; i++) {
+			for(int j=0; j<m; j++) {
+				if(j==m-1) {
+					System.out.printf("%d\n",AtrSet[i][j]);
 				}else {
-					System.out.printf("%.3f ", data[i][j]);
+					System.out.printf("%d ",AtrSet[i][j]);
 				}
 
 			}
 		}
+
+
+		BDT bdt = new BDT();
+		BDT tree = bdt.GrowTree(bsmp.Data[0], bsmp.Ans[0], AtrSet[0], d, nmin, rseed);
+		bdt.ShowTree(tree, bsmp.Data[0], bsmp.Ans[0], d, nmin);
+
+
+
+//		for(int i=0; i<7; i++) {
+//			bt.add(i);
+//		}
+
+
+//		System.out.println(bt.containsNode(2));
+//		bt.traverseInOrderWithoutRecursion();
+//		System.out.println();
+//		bt.traverseLevelOrder();
+//		System.out.println();
+
+
+	}
+
+
+
 
 //******RF Training******************************************************************
 
@@ -57,7 +94,7 @@ public class RF {
 //***********************************************************************************
 
 
-	}
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 

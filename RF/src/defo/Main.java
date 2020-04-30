@@ -5,6 +5,5 @@ public class Main {
 		System.out.println("Random Forest");
 		RF rf = new RF();
 		rf.RandomForest();
-
 	}
 }
