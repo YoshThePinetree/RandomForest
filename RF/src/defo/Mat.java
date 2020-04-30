@@ -160,6 +160,18 @@ public class Mat {
 	    	return ind;
 	    }
 
+	    public int [] FindbyInd (int X[], int a){
+	    	int n=X.length;
+	    	int ind [] = new int [n];
+	    	Arrays.fill(ind,0);
+	    	for(int i=0; i<n; i++) {
+	    		if(X[i]==a) {
+	    			ind[i] = 1;
+	    		}
+	    	}
+	    	return ind;
+	    }
+
 	    // uniquely sample the integer data from 0~d-1 and return the matrix Y
 	    // Y is n*m matrix: n is the number of features, m is the number of attributes
 	    public int [][] SmplVecUniq(int d, int n, int m, int rseed){

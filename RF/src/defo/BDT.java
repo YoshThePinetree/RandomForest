@@ -8,6 +8,7 @@ public class BDT {	// binary decision tree class
 	List<Double> V = new ArrayList<Double>();	// arrays in the list
 	List<Integer[]> N = new ArrayList<Integer[]>();
 	List<Integer> P = new ArrayList<Integer>();
+	List<Double> G = new ArrayList<Double>();
 
     // growing tree method
     public BDT GrowTree(double X[][], int A[], int Atr[], int d, int nmin, int rseed) {
@@ -18,6 +19,7 @@ public class BDT {	// binary decision tree class
 		List<Integer> parents = new ArrayList<Integer>();	// parents of the next level
 		List<Double> cdt = new ArrayList<Double>();	// arrays in the list
 		List<Integer[]> node = new ArrayList<Integer[]>();
+		List<Double> gini = new ArrayList<Double>();	// arrays in the list
 
     	for(int i=0; i<nmin; i++) {	// loop for tree depth
     		if(i==0) {	// at the loot node: assign all features
@@ -26,6 +28,7 @@ public class BDT {	// binary decision tree class
     				array[j] = j;
     			}
 				node.add(array);		// set all features to the root node
+				gini.add(Gini(A));		// calculate Gini coefficient for the root node
 
 				int bdr = rnd.NextInt(n);		// the selected border
 				double val = X[bdr][Atr[i]];	// a vlue of bifracation
@@ -44,11 +47,25 @@ public class BDT {	// binary decision tree class
 						cr++;
 					}
 				}
-
 				if(cl==0) {
 					left = null;
-				}if(cr==0){
+					gini.add(null);
+				}else {
+					int Al [] = new int [left.size()];
+					for(int j=0; j<Al.length; j++) {
+						Al[j] = A[left.get(j)];
+					}
+					gini.add(Gini(Al));
+				}
+				if(cr==0){
 					right = null;
+					gini.add(null);
+				}else {
+					int Ar [] = new int [right.size()];
+					for(int j=0; j<Ar.length; j++) {
+						Ar[j] = A[right.get(j)];
+					}
+					gini.add(Gini(Ar));
 				}
 
 				node.add(left.toArray(new Integer[left.size()]));
@@ -83,8 +100,23 @@ public class BDT {	// binary decision tree class
         					}
         					if(cl==0) {
         						left = null;
-        					}if(cr==0){
+        						gini.add(null);
+        					}else {
+        						int Al [] = new int [left.size()];
+        						for(int j=0; j<Al.length; j++) {
+        							Al[j] = A[left.get(j)];
+        						}
+        						gini.add(Gini(Al));
+        					}
+        					if(cr==0){
         						right = null;
+        						gini.add(null);
+        					}else {
+        						int Ar [] = new int [right.size()];
+        						for(int j=0; j<Ar.length; j++) {
+        							Ar[j] = A[right.get(j)];
+        						}
+        						gini.add(Gini(Ar));
         					}
 
         					node.add(left.toArray(new Integer[left.size()]));
@@ -96,9 +128,16 @@ public class BDT {	// binary decision tree class
     		}
     	}
 
+    	// calculate the information gain
+//    	double g=gini.get(0);
+//   	for(int i=1; i<gini.size(); i++) {
+//    		g = g - gini.get(i);
+//    	}
+
     	calc.V = cdt;
     	calc.N = node;
     	calc.P = parents;
+    	calc.G = gini;
     	return calc;
     }
 
@@ -131,9 +170,48 @@ public class BDT {	// binary decision tree class
     }
 
     // calculating Gini coefficient method
-    public double Gini(double X[][], int A[], int Atr[], int d, int nmin, int rseed) {
-    	double gini=0;
+    private double Gini(int A[]) {
+    	double gini = 0;
+    	int n=A.length;
+    	double sums=0;
+    	double sum=0;
+    	List<Integer> list = new ArrayList<Integer>();
+    	Mat mat = new Mat();
+
+    	// create the class list
+    	for(int i=0; i<n; i++) {
+    		if(i==0) {
+    			list.add(A[i]);
+    		}else {
+    			int count=0;
+    			boolean judge=true;
+    			while(count<list.size()) {
+    				if(list.get(count) == A[i]) {
+    					judge=false;
+    				}
+    				count++;
+    			}
+    			if(judge==true) {
+    				list.add(A[i]);
+    			}
+    		}
+    	}
+
+    	int ind [] = new int [n];
+    	for(int i=0; i<list.size(); i++) {
+    		ind = mat.FindbyInd(A, list.get(i));
+    		for(int j=0; j<n; j++) {
+    			sum = sum + ind[j];
+    		}
+    		sums = sums + Math.pow((sum/n),2);
+    		sum=0;
+    	}
+
+    	gini = 1 - sums;
 
     	return gini;
     }
 }
+
+
+

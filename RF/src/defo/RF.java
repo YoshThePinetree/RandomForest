@@ -68,6 +68,12 @@ public class RF {
 		BDT bdt = new BDT();
 		BDT tree = bdt.GrowTree(bsmp.Data[0], bsmp.Ans[0], AtrSet[0], d, nmin, rseed);
 		bdt.ShowTree(tree, bsmp.Data[0], bsmp.Ans[0], d, nmin);
+		System.out.println();
+
+		for(int i=0; i<tree.G.size(); i++) {
+			System.out.println(tree.G.get(i));
+		}
+
 
 
 
