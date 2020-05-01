@@ -31,6 +31,7 @@ public class RF {
 		double Spl [][][] = new double [b][n][d];	// randomly sampled dataset by bootstrap sampling
 		int m=2;									// the number of selected variables s.t. m<=d
 		int nmin=2;									// the depth of Binary Tree
+		int itemax=300;								// the number of training for a tree
 
 		// data normalization
 		double data[][] = new double[n][d];
@@ -64,29 +65,43 @@ public class RF {
 			}
 		}
 
-
 		BDT bdt = new BDT();
 		BDT tree = bdt.GrowTree(bsmp.Data[0], bsmp.Ans[0], AtrSet[0], d, nmin, rseed);
-		bdt.ShowTree(tree, bsmp.Data[0], bsmp.Ans[0], d, nmin);
+//		bdt.ShowTree(tree, bsmp.Data[0], bsmp.Ans[0], d, nmin);
 		System.out.println();
 
-		for(int i=0; i<tree.G.size(); i++) {
-			System.out.println(tree.G.get(i));
+		//for(int i=0; i<tree.G.size(); i++) {
+		//	System.out.println(tree.G.get(i));
+		//}
+
+		//******RF Training******************************************************************
+		int nc = (int) (Math.pow(2,nmin) - 1);		// the maximum number of conditions
+		double Condition [][] =  new double[b][nc];	// the condition matrix
+		for(int i=0; i<b; i++) {
+			tree = bdt.GrowTree(bsmp.Data[i], bsmp.Ans[i], AtrSet[i], d, nmin, rseed);
+			double maxIG = calcIG(tree);	// the initial information gain
+			double IG;
+
+			for(int ite=0; ite<itemax; ite++) {
+				tree = bdt.GrowTree(bsmp.Data[i], bsmp.Ans[i], AtrSet[i], d, nmin, ite);
+				IG = calcIG(tree);
+//				System.out.println(IG);
+				if(IG > maxIG) {
+					maxIG = IG;
+					for(int j=0; j<nc; j++) {
+						Condition[i][j] = tree.V.get(j);
+					}
+				}
+			}
+			System.out.println(maxIG);
 		}
 
+		//***********************************************************************************
 
 
 
-//		for(int i=0; i<7; i++) {
-//			bt.add(i);
-//		}
 
 
-//		System.out.println(bt.containsNode(2));
-//		bt.traverseInOrderWithoutRecursion();
-//		System.out.println();
-//		bt.traverseLevelOrder();
-//		System.out.println();
 
 
 	}
@@ -94,10 +109,7 @@ public class RF {
 
 
 
-//******RF Training******************************************************************
 
-
-//***********************************************************************************
 
 
 
@@ -283,6 +295,16 @@ public class RF {
 
 	    private static int[] unique(int[] nums) {
 	        return Arrays.stream(nums).distinct().toArray();
+	    }
+
+	    private static double calcIG(BDT tree) {
+	    	double IG = tree.G.get(0);
+			for(int j=1; j<tree.G.size(); j++) {	// the initial information gain
+				if(tree.G.get(j)!=null) {
+					IG = IG - tree.G.get(j);
+				}
+			}
+	    	return IG;
 	    }
 
 

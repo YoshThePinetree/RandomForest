@@ -56,6 +56,7 @@ public class BDT {	// binary decision tree class
 						Al[j] = A[left.get(j)];
 					}
 					gini.add(Gini(Al));
+					node.add(left.toArray(new Integer[left.size()]));
 				}
 				if(cr==0){
 					right = null;
@@ -66,10 +67,9 @@ public class BDT {	// binary decision tree class
 						Ar[j] = A[right.get(j)];
 					}
 					gini.add(Gini(Ar));
+					node.add(right.toArray(new Integer[right.size()]));
 				}
 
-				node.add(left.toArray(new Integer[left.size()]));
-				node.add(right.toArray(new Integer[right.size()]));
 				parents.add(0);
 
     		}else {	// except the root node
@@ -107,6 +107,7 @@ public class BDT {	// binary decision tree class
         							Al[j] = A[left.get(j)];
         						}
         						gini.add(Gini(Al));
+        						node.add(left.toArray(new Integer[left.size()]));
         					}
         					if(cr==0){
         						right = null;
@@ -117,22 +118,15 @@ public class BDT {	// binary decision tree class
         							Ar[j] = A[right.get(j)];
         						}
         						gini.add(Gini(Ar));
+            					node.add(right.toArray(new Integer[right.size()]));
         					}
 
-        					node.add(left.toArray(new Integer[left.size()]));
-        					node.add(right.toArray(new Integer[right.size()]));
         					parents.add(p[q]);
         				}
     				}
     			}
     		}
     	}
-
-    	// calculate the information gain
-//    	double g=gini.get(0);
-//   	for(int i=1; i<gini.size(); i++) {
-//    		g = g - gini.get(i);
-//    	}
 
     	calc.V = cdt;
     	calc.N = node;
