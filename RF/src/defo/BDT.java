@@ -48,7 +48,7 @@ public class BDT {	// binary decision tree class
 					}
 				}
 				if(cl==0) {
-					left = null;
+					//left = null;
 					gini.add(null);
 				}else {
 					int Al [] = new int [left.size()];
@@ -56,10 +56,10 @@ public class BDT {	// binary decision tree class
 						Al[j] = A[left.get(j)];
 					}
 					gini.add(Gini(Al));
-					node.add(left.toArray(new Integer[left.size()]));
 				}
+				node.add(left.toArray(new Integer[left.size()]));
 				if(cr==0){
-					right = null;
+					//right = null;
 					gini.add(null);
 				}else {
 					int Ar [] = new int [right.size()];
@@ -67,8 +67,8 @@ public class BDT {	// binary decision tree class
 						Ar[j] = A[right.get(j)];
 					}
 					gini.add(Gini(Ar));
-					node.add(right.toArray(new Integer[right.size()]));
 				}
+				node.add(right.toArray(new Integer[right.size()]));
 
 				parents.add(0);
 
@@ -79,7 +79,7 @@ public class BDT {	// binary decision tree class
 
     				// loop for the left and right children
     				for(int q=0; q<2; q++) {
-        				if(node.get(p[q])!=null) {
+        				if(node.get(p[q]).length!=0) {
         					Integer[] L = node.get(p[q]);
         					int bdr = rnd.NextInt(L.length);		// the selected border in L
         					double val = X[L[bdr]][Atr[i]];			// a value of bifracation
@@ -99,7 +99,7 @@ public class BDT {	// binary decision tree class
         						}
         					}
         					if(cl==0) {
-        						left = null;
+        						//left = null;
         						gini.add(null);
         					}else {
         						int Al [] = new int [left.size()];
@@ -107,10 +107,10 @@ public class BDT {	// binary decision tree class
         							Al[j] = A[left.get(j)];
         						}
         						gini.add(Gini(Al));
-        						node.add(left.toArray(new Integer[left.size()]));
         					}
+        					node.add(left.toArray(new Integer[left.size()]));
         					if(cr==0){
-        						right = null;
+        						//right = null;
         						gini.add(null);
         					}else {
         						int Ar [] = new int [right.size()];
@@ -118,8 +118,8 @@ public class BDT {	// binary decision tree class
         							Ar[j] = A[right.get(j)];
         						}
         						gini.add(Gini(Ar));
-            					node.add(right.toArray(new Integer[right.size()]));
         					}
+        					node.add(right.toArray(new Integer[right.size()]));
 
         					parents.add(p[q]);
         				}

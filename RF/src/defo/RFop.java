@@ -90,4 +90,13 @@ public class RFop {
 		return calc;
 	}
 
+	public int Evaluation(BDT treelist, int Atr[][], double X[], int A){
+		int ans=0;
+		//while(true){
+
+		//}
+
+		return ans;
+	}
+
 }

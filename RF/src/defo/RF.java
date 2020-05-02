@@ -28,10 +28,9 @@ public class RF {
 		int nTest=n-nTrain;							// the number of testing data
 		int rseed=1;								// random seed
 		int b=5;									// the number of Decision Tree
-		double Spl [][][] = new double [b][n][d];	// randomly sampled dataset by bootstrap sampling
 		int m=2;									// the number of selected variables s.t. m<=d
 		int nmin=2;									// the depth of Binary Tree
-		int itemax=300;								// the number of training for a tree
+		int itemax=10000;								// the number of training for a tree
 
 		// data normalization
 		double data[][] = new double[n][d];
@@ -70,17 +69,17 @@ public class RF {
 //		bdt.ShowTree(tree, bsmp.Data[0], bsmp.Ans[0], d, nmin);
 		System.out.println();
 
-		//for(int i=0; i<tree.G.size(); i++) {
-		//	System.out.println(tree.G.get(i));
-		//}
 
 		//******RF Training******************************************************************
+
 		int nc = (int) (Math.pow(2,nmin) - 1);		// the maximum number of conditions
 		double Condition [][] =  new double[b][nc];	// the condition matrix
+		List<BDT> treelist = new ArrayList<BDT>();	// the list for tree
 		for(int i=0; i<b; i++) {
 			tree = bdt.GrowTree(bsmp.Data[i], bsmp.Ans[i], AtrSet[i], d, nmin, rseed);
 			double maxIG = calcIG(tree);	// the initial information gain
 			double IG;
+			int ind=0;
 
 			for(int ite=0; ite<itemax; ite++) {
 				tree = bdt.GrowTree(bsmp.Data[i], bsmp.Ans[i], AtrSet[i], d, nmin, ite);
@@ -89,15 +88,35 @@ public class RF {
 				if(IG > maxIG) {
 					maxIG = IG;
 					for(int j=0; j<nc; j++) {
-						Condition[i][j] = tree.V.get(j);
+						//Condition[i][j] = tree.V.get(j);
 					}
+					ind = ite;
 				}
 			}
-			System.out.println(maxIG);
+			tree = bdt.GrowTree(bsmp.Data[i], bsmp.Ans[i], AtrSet[i], d, nmin, ind);
+			treelist.add(tree);
+
+			System.out.println();
+
+			for(int j=0; j<tree.G.size(); j++) {
+				System.out.println(tree.G.get(j));
+			}
+			bdt.ShowTree(tree, bsmp.Data[i], bsmp.Ans[i], d, nmin);
 		}
+
+
 
 		//***********************************************************************************
 
+		//******RF Testing*******************************************************************
+
+		for(int i=0; i<nTest; i++) {
+
+		}
+
+
+
+		//***********************************************************************************
 
 
 
