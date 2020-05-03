@@ -104,33 +104,35 @@ public class RF {
 			bdt.ShowTree(tree, bsmp.Data[i], bsmp.Ans[i], d, nmin);
 		}
 
-
-
 		//***********************************************************************************
 
 		//******RF Testing*******************************************************************
+		int treeOut [] = new int [b];
+		int testAns [] = new int [nTest];
+		int match [] = new int [nTest];
+		Arrays.fill(match,0);
 
+		System.out.println("Ans.Pred	Ans.Act");
 		for(int i=0; i<nTest; i++) {
+			for(int j=0; j<b; j++) {
+				treeOut [j] = bdt.Evaluation(treelist.get(j), AtrSet[j], smp.TestData[i], bsmp.Ans[j], m, nmin);
+			}
+			testAns[i] = mat.MajorityVote(treeOut);
 
+			if(testAns[i]==smp.TestAns[i]) {
+				match[i]=1;
+			}
+
+			System.out.printf("%d\t", testAns[i]);
+			System.out.printf("%d\n", smp.TestAns[i]);
 		}
 
-
+		String[] name = {"setosa","versicolor","virginica"};
+		ConfusionMatrix(testAns, smp.TestAns, name);
 
 		//***********************************************************************************
 
-
-
-
-
-
 	}
-
-
-
-
-
-
-
 
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -326,9 +328,33 @@ public class RF {
 	    	return IG;
 	    }
 
+	    private static void ConfusionMatrix(int Pred[], int Act[], String name[]) {
+	    	int n=name.length;	// the number of classes
+	    	int m=Pred.length;	// the number of features
+	    	int CM [][] = new int [n][n];
+	    	for(int i=0; i<n; i++) {
+	    		Arrays.fill(CM[i],0);
+	    	}
 
+	    	int a,b;
 
+	    	for(int i=0; i<m; i++) {
+	    		a = Act[i];
+	    		b = Pred[i];
+	    		CM[a][b] = CM[a][b] + 1;
+	    	}
 
+	    	for(int i=0; i<n; i++) {
+	    		System.out.printf(name[i]+"\t");
+	    		for(int j=0; j<n; j++) {
+	    			if(j==n-1) {
+			    		System.out.printf(" %d\n", CM[i][j]);
+	    			}else {
+			    		System.out.printf(" %d", CM[i][j]);
+	    			}
+		    	}
+	    	}
 
+	    }
 
 }

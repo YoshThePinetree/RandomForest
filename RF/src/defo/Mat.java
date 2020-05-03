@@ -172,6 +172,28 @@ public class Mat {
 	    	return ind;
 	    }
 
+	    public int MajorityVote(int X[]) {
+	    	int p=0;
+	    	int n=X.length;
+	    	int nums [] = unique(X);
+	    	int m=nums.length;
+
+	    	int max=0;
+	    	int count=0;
+	    	for(int i=0; i<m; i++) {
+	    		for(int j=0; j<n; j++) {
+	    			if(X[j]==nums[i]) {
+	    				count++;
+	    			}
+	    		}
+	    		if(count>max) {
+	    			p=nums[i];
+	    		}
+	    		count=0;
+	    	}
+	    	return p;
+	    }
+
 	    // uniquely sample the integer data from 0~d-1 and return the matrix Y
 	    // Y is n*m matrix: n is the number of features, m is the number of attributes
 	    public int [][] SmplVecUniq(int d, int n, int m, int rseed){
@@ -202,6 +224,10 @@ public class Mat {
 	    	}
 
 	    	return Y;
+	    }
+
+	    private static int[] unique(int[] nums) {
+	        return Arrays.stream(nums).distinct().toArray();
 	    }
 
 }

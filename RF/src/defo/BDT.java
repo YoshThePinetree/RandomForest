@@ -205,6 +205,64 @@ public class BDT {	// binary decision tree class
 
     	return gini;
     }
+
+    // return 1 answer from 1 feature by 1 tree
+    public int Evaluation(BDT tree, int Atr[], double X[], int A[], int m, int nmin){
+		int ans=0;
+		int nc=0;						// node counter
+		int atc [] = new int [nmin];	// attribure counter
+		BDT bdt = new BDT();
+		Mat mat = new Mat();
+
+		int count=0;
+		for(int i=0; i<nmin; i++) {	// create attibute counter vector
+			atc[i] = count;
+			count++;
+			if(count==m) {
+				count=0;
+			}
+		}
+
+		boolean loop=true;
+		count = 0;
+		while(loop){
+			if(X[Atr[atc[count]]] < tree.V.get(nc)) {	// bifracation to the left node
+				nc = (2*nc) + 1;
+			}else {										// bifracation to the right node
+				nc = (2*nc) + 2;
+			}
+			count++;
+
+			if(nc >= ((Math.pow(2,nmin+1) - 1) - (Math.pow(2,nmin)))) {
+				loop=false;
+			}
+		}
+
+		if(tree.N.get(nc).length==0) {
+			if(nc%2==0) {
+				nc--;
+			}else {
+				nc++;
+			}
+		}
+
+		Integer k [] = tree.N.get(nc);
+
+		int node [] = new int[k.length];
+		for(int i=0; i<node.length; i++) {
+			node[i] = A[k[i]];
+			//System.out.println(k[i]);
+		}
+		double gini = bdt.Gini(node);
+
+		if(gini==0) {		// if the node set is full of one number
+			ans = node[0];
+		}else {				// otherwise take a majority vote
+			ans = mat.MajorityVote(node);
+		}
+
+		return ans;
+	}
 }
 
 
