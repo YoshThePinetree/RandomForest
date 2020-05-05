@@ -29,7 +29,7 @@ public class RF {
 		int rseed=1;								// random seed
 		int b=5;									// the number of Decision Tree
 		int m=2;									// the number of selected variables s.t. m<=d
-		int nmin=2;									// the depth of Binary Tree
+		int nmin=4;									// the depth of Binary Tree
 		int itemax=10000;								// the number of training for a tree
 
 		// data normalization
@@ -65,35 +65,14 @@ public class RF {
 		}
 
 		BDT bdt = new BDT();
-		BDT tree = bdt.GrowTree(bsmp.Data[0], bsmp.Ans[0], AtrSet[0], d, nmin, rseed);
 //		bdt.ShowTree(tree, bsmp.Data[0], bsmp.Ans[0], d, nmin);
 		System.out.println();
 
 
 		//******RF Training******************************************************************
-
-		int nc = (int) (Math.pow(2,nmin) - 1);		// the maximum number of conditions
-		double Condition [][] =  new double[b][nc];	// the condition matrix
 		List<BDT> treelist = new ArrayList<BDT>();	// the list for tree
 		for(int i=0; i<b; i++) {
-			tree = bdt.GrowTree(bsmp.Data[i], bsmp.Ans[i], AtrSet[i], d, nmin, rseed);
-			double maxIG = calcIG(tree);	// the initial information gain
-			double IG;
-			int ind=0;
-
-			for(int ite=0; ite<itemax; ite++) {
-				tree = bdt.GrowTree(bsmp.Data[i], bsmp.Ans[i], AtrSet[i], d, nmin, ite);
-				IG = calcIG(tree);
-//				System.out.println(IG);
-				if(IG > maxIG) {
-					maxIG = IG;
-					for(int j=0; j<nc; j++) {
-						//Condition[i][j] = tree.V.get(j);
-					}
-					ind = ite;
-				}
-			}
-			tree = bdt.GrowTree(bsmp.Data[i], bsmp.Ans[i], AtrSet[i], d, nmin, ind);
+			BDT tree = bdt.GrowTree(bsmp.Data[i], bsmp.Ans[i], AtrSet[i], d, nmin, rseed, itemax);
 			treelist.add(tree);
 
 			System.out.println();
@@ -131,6 +110,15 @@ public class RF {
 		ConfusionMatrix(testAns, smp.TestAns, name);
 
 		//***********************************************************************************
+
+		//for(int i=0; i<smp.TestData.length; i++) {
+		//	for(int j=0; j<smp.TestData[0].length; j++) {
+		//		System.out.printf("%.1f ", smp.TestData[i][j]);
+		//		if(j==smp.TestData[0].length-1) {
+		//			System.out.printf("%d\n", smp.TestAns[i]);
+		//		}
+		//	}
+		//}
 
 	}
 
@@ -318,15 +306,7 @@ public class RF {
 	        return Arrays.stream(nums).distinct().toArray();
 	    }
 
-	    private static double calcIG(BDT tree) {
-	    	double IG = tree.G.get(0);
-			for(int j=1; j<tree.G.size(); j++) {	// the initial information gain
-				if(tree.G.get(j)!=null) {
-					IG = IG - tree.G.get(j);
-				}
-			}
-	    	return IG;
-	    }
+
 
 	    private static void ConfusionMatrix(int Pred[], int Act[], String name[]) {
 	    	int n=name.length;	// the number of classes

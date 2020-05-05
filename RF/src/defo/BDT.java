@@ -10,8 +10,14 @@ public class BDT {	// binary decision tree class
 	List<Integer> P = new ArrayList<Integer>();
 	List<Double> G = new ArrayList<Double>();
 
+	double gleft, gright;
+	List<Integer> nleft = new ArrayList<Integer>();	// the left node (unsatisfy the condition)
+	List<Integer> nright = new ArrayList<Integer>();	// the right node (satisfy the condition)
+
+
+
     // growing tree method
-    public BDT GrowTree(double X[][], int A[], int Atr[], int d, int nmin, int rseed) {
+    public BDT GrowTree(double X[][], int A[], int Atr[], int d, int nmin, int rseed, int maxite) {
     	BDT calc = new BDT();
     	int n=X.length;			// the number of elements
     	int m=Atr.length;	// the number of selected attributes
@@ -20,7 +26,24 @@ public class BDT {	// binary decision tree class
 		List<Double> cdt = new ArrayList<Double>();	// arrays in the list
 		List<Integer[]> node = new ArrayList<Integer[]>();
 		List<Double> gini = new ArrayList<Double>();	// arrays in the list
+		List<Double> weight = new ArrayList<Double>();
+		boolean loop = true;
+		double IGmax = -999999999;
+		double valmax = 0;
+		int count = 0;
+		double IG;
 
+		int Atrind [] = new int [nmin];
+		int u=0;
+		for(int i=0; i<nmin; i++) {
+			Atrind[i]=Atr[u];
+			u++;
+			if(u==m) {
+				u=0;
+			}
+		}
+
+		int ck=0;
     	for(int i=0; i<nmin; i++) {	// loop for tree depth
     		if(i==0) {	// at the loot node: assign all features
     			Integer array [] = new Integer[n];
@@ -29,102 +52,140 @@ public class BDT {	// binary decision tree class
     			}
 				node.add(array);		// set all features to the root node
 				gini.add(Gini(A));		// calculate Gini coefficient for the root node
+				gini.add((double) 0);	// temporal addition to the list
+				gini.add((double) 0);
+				weight.add((double) 1);
+				weight.add((double) 0);	// temporal addition to the list
+				weight.add((double) 0);
 
-				int bdr = rnd.NextInt(n);		// the selected border
-				double val = X[bdr][Atr[i]];	// a vlue of bifracation
-				cdt.add(val);					// set the border value
-				List<Integer> left = new ArrayList<Integer>();	// the left node (unsatisfy the condition)
-				List<Integer> right = new ArrayList<Integer>();	// the right node (satisfy the condition)
-				int cl=0, cr=0;
+				Integer[] L = node.get(0);
 
-				// assign each set of nodes to the next level tree
-				for(int j=0; j<n; j++) {
-					if(X[j][Atr[i]] < val) {
-						left.add(j);
-						cl++;
+				count=0;
+				while(loop) {	// loop until obtaining the best partition
+
+//					int bdr = rnd.NextInt(L.length);		// the selected border
+					double val = X[count][Atrind[i]];	// a vlue of bifracation
+
+					BDT pttn = Partition(X, Atrind, A, L, val, i);
+					gini.set(1, pttn.gleft);
+					gini.set(2, pttn.gright);
+					int ls = pttn.nleft.size();
+					int rs = pttn.nright.size();
+					if (pttn.nleft == null || pttn.nleft.size() == 0) {
+						weight.set(1, (double) 1);
 					}else {
-						right.add(j);
-						cr++;
+						weight.set(1, (double) (ls/(ls+rs)));
 					}
-				}
-				if(cl==0) {
-					//left = null;
-					gini.add(null);
-				}else {
-					int Al [] = new int [left.size()];
-					for(int j=0; j<Al.length; j++) {
-						Al[j] = A[left.get(j)];
+					if (pttn.nright == null || pttn.nright.size() == 0) {
+						weight.set(2, (double) 1);
+					}else {
+						weight.set(2, (double) (rs/(ls+rs)));
 					}
-					gini.add(Gini(Al));
-				}
-				node.add(left.toArray(new Integer[left.size()]));
-				if(cr==0){
-					//right = null;
-					gini.add(null);
-				}else {
-					int Ar [] = new int [right.size()];
-					for(int j=0; j<Ar.length; j++) {
-						Ar[j] = A[right.get(j)];
+					IG = calcIG(gini,weight);
+					if(IG>IGmax) {
+						IGmax = IG;
+						valmax = val;
 					}
-					gini.add(Gini(Ar));
-				}
-				node.add(right.toArray(new Integer[right.size()]));
 
+					count++;
+					if(count>=L.length) {
+						loop=false;
+					}
+				}
+
+				cdt.add(valmax);					// set the border value
+				BDT pttn = Partition(X, Atrind, A, L, valmax, i);		// recalculate the partition
+				List<Integer> left = pttn.nleft;	// the left node (unsatisfy the condition)
+				List<Integer> right = pttn.nright;	// the right node (satisfy the condition)
+				gini.set(1, pttn.gleft);
+				gini.set(2, pttn.gright);
+
+				node.add(left.toArray(new Integer[left.size()]));
+				node.add(right.toArray(new Integer[right.size()]));
 				parents.add(0);
 
     		}else {	// except the root node
-    			for(int k=0; k<Math.pow(2,(i-1)); k++) {	// loop until 2^i
+
+    			for(int k=ck; k<(ck+Math.pow(2,(i-1))); k++) {	// loop until 2^i, k is the parent no.
     				int l = parents.get(k);	// the parent number of this node
-    				int [] p = {((l*2)+(k+1)),((l*2)+(k+2))}; 	// the number of these node
+    				int [] p = {(l+(k+1)),(l+(k+2))}; 	// the number of these node
 
     				// loop for the left and right children
     				for(int q=0; q<2; q++) {
-        				if(node.get(p[q]).length!=0) {
-        					Integer[] L = node.get(p[q]);
-        					int bdr = rnd.NextInt(L.length);		// the selected border in L
-        					double val = X[L[bdr]][Atr[i]];			// a value of bifracation
-        					cdt.add(val);					// set the border value
-        					List<Integer> left = new ArrayList<Integer>();	// the left node (unsatisfy the condition)
-        					List<Integer> right = new ArrayList<Integer>();	// the right node (satisfy the condition)
-        					int cl=0, cr=0;
+        				//if(node.get(p[q]).length!=0) {
+        					gini.add((double) 0);	// temporal addition to the list
+        					gini.add((double) 0);
+        					weight.add((double) 0);	// temporal addition to the list
+        					weight.add((double) 0);
 
-        					// assign each set of nodes to the next level tree
-        					for(int j=0; j<L.length; j++) {
-        						if(X[L[j]][Atr[i]] < val) {
-        							left.add(L[j]);
-        							cl++;
-        						}else {
-        							right.add(L[j]);
-        							cr++;
-        						}
-        					}
-        					if(cl==0) {
-        						//left = null;
-        						gini.add(null);
+        					Integer[] L = node.get(p[q]);
+        					valmax = 0;
+        					IGmax = -999999999;
+        					count=0;
+        					loop = true;
+
+        					if(gini.get(p[q])==0) {	// if the parent node is undividable
+            					cdt.add(valmax);					// set the border value
+            					List<Integer> left = new ArrayList<Integer>();	// the left node (unsatisfy the condition)
+            					List<Integer> right = new ArrayList<Integer>();	// the right node (satisfy the condition)
+            					for(int j=0; j<node.get(p[q]).length; j++) {
+            						left.add(node.get(p[q])[j]);
+            						right.add(node.get(p[q])[j]);
+            					}
+
+            					gini.set((2*p[q])+1, (double) 0);
+        						gini.set((2*p[q])+2, (double) 0);
+            					node.add(left.toArray(new Integer[left.size()]));
+            					node.add(right.toArray(new Integer[right.size()]));
         					}else {
-        						int Al [] = new int [left.size()];
-        						for(int j=0; j<Al.length; j++) {
-        							Al[j] = A[left.get(j)];
-        						}
-        						gini.add(Gini(Al));
+
+	        					while(loop) {	// loop until obtaining the best partition
+
+	        						//int bdr = rnd.NextInt(L.length);		// the selected border
+	        						double val = X[L[count]][Atrind[i]];	// a value of bifracation
+
+	        						BDT pttn = Partition(X, Atrind, A, L, val, i);
+	        						gini.set((2*p[q])+1, pttn.gleft);
+	        						gini.set((2*p[q])+2, pttn.gright);
+	        						int ls = pttn.nleft.size();
+	        						int rs = pttn.nright.size();
+	        						if (pttn.nleft == null || pttn.nleft.size() == 0) {
+	            						weight.set((2*p[q])+1, (double) 1);
+	        						}else {
+	            						weight.set((2*p[q])+1, (double) (ls/(ls+rs)));
+	        						}
+	        						if (pttn.nright == null || pttn.nright.size() == 0) {
+	            						weight.set((2*p[q])+2, (double) 1);
+	        						}else {
+	            						weight.set((2*p[q])+2, (double) (rs/(ls+rs)));
+	        						}
+	        						IG = calcIG(gini,weight);
+
+	        						if(IG>IGmax) {
+	        							IGmax = IG;
+	        							valmax = val;
+	        						}
+
+	        						count++;
+	        						if(count>=L.length) {
+	        							loop=false;
+	        						}
+	        					}
+	        					cdt.add(valmax);					// set the border value
+	        					BDT pttn = Partition(X, Atrind, A, L, valmax, i);		// recalculate the partition
+	        					List<Integer> left = pttn.nleft;	// the left node (unsatisfy the condition)
+	        					List<Integer> right = pttn.nright;	// the right node (satisfy the condition)
+	    						gini.set((2*p[q])+1, pttn.gleft);
+	    						gini.set((2*p[q])+2, pttn.gright);
+	        					node.add(left.toArray(new Integer[left.size()]));
+	        					node.add(right.toArray(new Integer[right.size()]));
         					}
-        					node.add(left.toArray(new Integer[left.size()]));
-        					if(cr==0){
-        						//right = null;
-        						gini.add(null);
-        					}else {
-        						int Ar [] = new int [right.size()];
-        						for(int j=0; j<Ar.length; j++) {
-        							Ar[j] = A[right.get(j)];
-        						}
-        						gini.add(Gini(Ar));
-        					}
-        					node.add(right.toArray(new Integer[right.size()]));
 
         					parents.add(p[q]);
-        				}
+        				//}
     				}
     			}
+    			ck = (int) (ck+Math.pow(2,i-1));
     		}
     	}
 
@@ -133,6 +194,53 @@ public class BDT {	// binary decision tree class
     	calc.P = parents;
     	calc.G = gini;
     	return calc;
+    }
+
+    // making partition from a node method
+    private static BDT Partition(double X[][], int Atr[], int A[], Integer[] L, double val, int i) {
+    	int cl=0, cr=0;
+    	List<Integer> nodeleft = new ArrayList<Integer>();
+    	List<Integer> noderight = new ArrayList<Integer>();
+    	BDT pttn = new BDT();
+    	double ginileft, giniright;
+
+		// assign each set of nodes to the next level tree
+		for(int j=0; j<L.length; j++) {
+			if(X[L[j]][Atr[i]] <= val) {
+				nodeleft.add(L[j]);
+				cl++;
+			}else {
+				noderight.add(L[j]);
+				cr++;
+			}
+		}
+
+		if(cl==0) {	// no partition to the left
+			ginileft = 99999999;	// penalty
+		}else {
+			int Al [] = new int [nodeleft.size()];
+			for(int j=0; j<Al.length; j++) {
+				Al[j] = A[nodeleft.get(j)];
+			}
+			ginileft = Gini(Al);
+		}
+
+		if(cr==0){	// no partition to the right
+			giniright = 99999999;	// penalty
+		}else {
+			int Ar [] = new int [noderight.size()];
+			for(int j=0; j<Ar.length; j++) {
+				Ar[j] = A[noderight.get(j)];
+			}
+			giniright = Gini(Ar);
+		}
+
+		pttn.gleft=ginileft;
+		pttn.gright=giniright;
+		pttn.nleft=nodeleft;
+		pttn.nright=noderight;
+
+		return pttn;
     }
 
     // showing tree method
@@ -164,7 +272,7 @@ public class BDT {	// binary decision tree class
     }
 
     // calculating Gini coefficient method
-    private double Gini(int A[]) {
+    private static double Gini(int A[]) {
     	double gini = 0;
     	int n=A.length;
     	double sums=0;
@@ -211,7 +319,6 @@ public class BDT {	// binary decision tree class
 		int ans=0;
 		int nc=0;						// node counter
 		int atc [] = new int [nmin];	// attribure counter
-		BDT bdt = new BDT();
 		Mat mat = new Mat();
 
 		int count=0;
@@ -226,7 +333,7 @@ public class BDT {	// binary decision tree class
 		boolean loop=true;
 		count = 0;
 		while(loop){
-			if(X[Atr[atc[count]]] < tree.V.get(nc)) {	// bifracation to the left node
+			if(X[Atr[atc[count]]] <= tree.V.get(nc)) {	// bifracation to the left node
 				nc = (2*nc) + 1;
 			}else {										// bifracation to the right node
 				nc = (2*nc) + 2;
@@ -253,7 +360,7 @@ public class BDT {	// binary decision tree class
 			node[i] = A[k[i]];
 			//System.out.println(k[i]);
 		}
-		double gini = bdt.Gini(node);
+		double gini = Gini(node);
 
 		if(gini==0) {		// if the node set is full of one number
 			ans = node[0];
@@ -263,6 +370,14 @@ public class BDT {	// binary decision tree class
 
 		return ans;
 	}
+
+    private static double calcIG(List<Double> list, List<Double> weight) {
+    	double IG = list.get(0);
+		for(int j=1; j<list.size(); j++) {	// the initial information gain
+				IG = IG - (weight.get(j))*(list.get(j));
+		}
+    	return IG;
+    }
 }
 
 
